@@ -1,4 +1,6 @@
-# Retrieve events created by you in a Exchange Calendar
+# My Exchange Events
+
+Retrieve events created by you in a Exchange Calendar
 
 ### Install dependencies
 
