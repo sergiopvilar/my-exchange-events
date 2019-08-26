@@ -42,8 +42,8 @@ class ExchangeEventsReport
 
   def report
     parse_options
-    # @cli = Viewpoint::EWSClient.new @options[:endpoint], @options[:user], @options[:password]
-    # print_report
+    @cli = Viewpoint::EWSClient.new @options[:endpoint], @options[:user], @options[:password]
+    print_report
   end
 
   def starting_date
