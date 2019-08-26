@@ -17,7 +17,9 @@ Put your details in the `.env` file.
 ### RUN!
 
 ```
-ruby app.rb
+./report
 ```
+
+Run `./report --help` for more information.
 
 Enjoy.

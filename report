@@ -1,0 +1,83 @@
+#!/usr/bin/env ruby
+
+require 'English'
+require 'optparse'
+require 'viewpoint'
+require 'business_time'
+require 'dotenv/load'
+include Viewpoint::EWS
+
+class ExchangeEventsReport
+
+  def parse_options
+    @options = default_options
+
+    OptionParser.new do |opts|
+      opts.banner = "Usage: report [options]"
+
+      opts.on('-o', '--organizer=true', 'Lists events where you are the organizer.') { |org| @options[:organizer] = org }
+      opts.on('--from=DATE', 'Date where the events should start.') { |date|  @options[:date] = date }
+      opts.on('--year=YEAR', 'Get events from this year and beyond.') { |year|  @options[:year] = year }
+      opts.on('--all', 'Get events from all time.') { @options[:year] = false }
+      opts.on('--endpoint=ENDPOINT', 'Set the Exchange endpoint.') { |endpoint| @options[:endpoint] = endpoint }
+      opts.on('--user=USER', 'Set the Exchange user.') { |user| @options[:user] = user }
+      opts.on('--password=PASSWORD', 'Set the Exchange password.') { |password| @options[:password] = password }
+      opts.on('-h', '--help', 'Prints this help') do
+        puts opts
+        exit
+      end
+    end.parse!
+  end
+
+  def default_options
+    {
+      year: Time.new.year,
+      date: false,
+      organizer: true,
+      endpoint: ENV['ENDPOINT'],
+      user: ENV['EMAIL'],
+      pass: ENV['PASSWORD']
+    }
+  end
+
+  def report
+    parse_options
+    # @cli = Viewpoint::EWSClient.new @options[:endpoint], @options[:user], @options[:password]
+    # print_report
+  end
+
+  def starting_date
+    return @options[:date] if @options[:date]
+    return "#{Time.new.year}-01-01" if @options[:year]
+  end
+
+  def events
+    calendar = @cli.get_folder(:calendar, opts = {act_as: @options[:user]})
+    events = starting_date ? calendar.items_since(Date.iso8601(starting_date)) : calendar.items
+    events.select! {|item| item.my_response_type == "Organizer" } if @options[:organizer]
+  end
+
+  def print_report
+    years = []
+
+    events.each do |item|
+      year = item.start.strftime("%Y")
+      unless years.include?(year)
+        years.push(year)
+        puts "#{year}--------------------------------------------"
+      end
+      # byebug
+      puts "#{item.start.strftime('%d/%m/%Y')} - #{item.subject} (#{item.start.business_days_until(item.end)} business days)"
+    end
+  end
+
+end
+
+def main
+  exevents = ExchangeEventsReport.new
+  exevents.report
+rescue OptionParser::InvalidOption => e
+  abort(e.message)
+end
+
+main if $PROGRAM_NAME == __FILE__
