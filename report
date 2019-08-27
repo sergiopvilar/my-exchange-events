@@ -55,6 +55,7 @@ class ExchangeEventsReport
     calendar = @cli.get_folder(:calendar, opts = {act_as: @options[:user]})
     events = starting_date ? calendar.items_since(Date.iso8601(starting_date)) : calendar.items
     events.select! {|item| item.my_response_type == "Organizer" } if @options[:organizer]
+    events.sort_by! { |item| item.start.to_time.to_i }
   end
 
   def print_report
